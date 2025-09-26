@@ -2,7 +2,7 @@
   "profiles": {
     "WhatsAppExport2Excel": {
       "commandName": "Project",
-      "commandLineArgs": "\"E:\\SourceCode\\Mine\\TestWhatsAppPull\\WhatsApp Chat with DIYAR-KFIA\\WhatsApp Chat with DIYAR-KFIA.txt\" \"E:\\SourceCode\\Mine\\TestWhatsAppPull\\WhatsApp Chat with DIYAR-KFIA\\Chat.xlsx\" --media-dir=\"E:\\SourceCode\\Mine\\TestWhatsAppPull\\WhatsApp Chat with DIYAR-KFIA\" --culture=ar-SA --timezone=+03:00 --skip-system"
+      "commandLineArgs": "\"E:\\SourceCode\\Mine\\WhatsApp Chat with DIYAR-KFIA\\WhatsApp Chat with DIYAR-KFIA.txt\" \"E:\\SourceCode\\Mine\\WhatsApp Chat with DIYAR-KFIA\\Chat-all123.xlsx\" --media-dir=\"E:\\SourceCode\\Mine\\WhatsApp Chat with DIYAR-KFIA\" --culture=ar-SA --timezone=+03:00 --skip-system --from=2025-09-04 --to=2025-09-22 --sheet=all\r\n"
     }
   }
 }
