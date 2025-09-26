@@ -10,37 +10,22 @@ using ClosedXML.Excel;
 namespace WhatsAppChatToExcel;
 internal static class Program
 {
+    //"E:\SourceCode\Mine\WhatsApp Chat with DIYAR-KFIA\WhatsApp Chat with DIYAR-KFIA.txt" "E:\SourceCode\Mine\WhatsApp Chat with DIYAR-KFIA\Chat-all123.xlsx" --media-dir="E:\SourceCode\Mine\WhatsApp Chat with DIYAR-KFIA" --culture=ar-SA --timezone=+03:00 --skip-system --from=2025-09-04 --to=2025-09-22 --sheet=all
     private static void Main(string[] args)
     {
-        var cmdOptions = CommandLineOptions.Parse(args);
-
-        var culture = CultureInfo.InvariantCulture;
-        if (!string.IsNullOrWhiteSpace(cmdOptions.CultureName))
-        {
-            try { culture = CultureInfo.GetCultureInfo(cmdOptions.CultureName); }
-            catch { /* Use default culture */ }
-        }
-
-        var parserOptions = new ChatParserOptions
-        {
-            Culture = culture,
-            SkipSystemMessages = cmdOptions.SkipSystem,
-            TimezoneOffset = cmdOptions.TimezoneOffset,
-            FromDate = cmdOptions.FromDate,
-            ToDate = cmdOptions.ToDate,
-            MediaDirectory = cmdOptions.MediaDirectory
-        };
-
+        var parserOptions = ChatParserOptions.LoadFromSettingsFile();
         var parser = new ChatParser(parserOptions);
-        var messages = parser.ParseChat(cmdOptions.InputPath);
+        var messages = parser.ParseChat();
 
-        var excelWriter = new ExcelWriter(cmdOptions, parserOptions);
-        excelWriter.WriteExcel(messages, cmdOptions.OutputPath);
+        var excelWriter = new ExcelWriter(parserOptions);
+        excelWriter.WriteExcel(messages, parserOptions.OutputPath);
 
-        Console.WriteLine($"\nExcel written: {cmdOptions.OutputPath}");
-        if (cmdOptions.FromDate.HasValue || cmdOptions.ToDate.HasValue)
-            Console.WriteLine($"Filtered days: {(cmdOptions.FromDate?.ToString("yyyy-MM-dd") ?? "min")} → {(cmdOptions.ToDate?.ToString("yyyy-MM-dd") ?? "max")}");
-        Console.WriteLine($"Sheet mode: {cmdOptions.SheetMode}");
+        var includedMedia = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        Console.WriteLine($"\nExcel written: {parserOptions.OutputPath}");
+        if (parserOptions.FromDate.HasValue || parserOptions.ToDate.HasValue)
+            Console.WriteLine($"Filtered days: {(parserOptions.FromDate?.ToString("yyyy-MM-dd") ?? "min")} → {(parserOptions.ToDate?.ToString("yyyy-MM-dd") ?? "max")}");
+        Console.WriteLine($"Sheet mode: {parserOptions.SheetMode}");
         Console.WriteLine("Press any key to exit...");
         Console.ReadKey();
     }

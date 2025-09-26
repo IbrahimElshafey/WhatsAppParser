@@ -1,0 +1,13 @@
+{
+  "InputPath": "E:\\SourceCode\\Mine\\WhatsApp Chat with DIYAR-KFIA\\WhatsApp Chat with DIYAR-KFIA.txt",
+  "OutputPath": "E:\\SourceCode\\Mine\\Issues-all.xlsx",
+  "MediaDirectory": "E:\\SourceCode\\Mine\\WhatsApp Chat with DIYAR-KFIA",
+  "SkipSystem": true,
+  "CultureName": "en-US",
+  "ForceRtl": true,
+  "FromDate": "2025-09-04",
+  "ToDate": "2025-09-22",
+  //Day= Page per day, All = All in one sheet
+  "SheetMode": "All",
+  "MoveNotUsedMedia": true
+}

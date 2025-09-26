@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace WhatsAppChatToExcel;
@@ -40,10 +42,39 @@ internal sealed class ChatParserOptions
         new Regex(@"\b[\p{L}\p{Nd}_\-]+\.(jpg|jpeg|png|gif|mp4|mp3|opus|pdf|docx?|xlsx?|pptx?|heic|mov|zip)\b",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-    public CultureInfo Culture { get; init; } = CultureInfo.InvariantCulture;
-    public bool SkipSystemMessages { get; init; }
-    public TimeSpan? TimezoneOffset { get; init; }
+    public string InputPath { get; init; } = "";
+    public string OutputPath { get; init; } = "";
+    public string? MediaDirectory { get; init; }
+    public bool SkipSystem { get; init; }
+    public string? CultureName { get; init; }
+    public bool ForceRtl { get; init; } = true;
     public DateTime? FromDate { get; init; }
     public DateTime? ToDate { get; init; }
-    public string? MediaDirectory { get; init; }
+    public bool MoveNotUsedMedia { get; init; } = true;
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public SheetMode SheetMode { get; init; } = SheetMode.Day;
+
+    public static ChatParserOptions LoadFromSettingsFile()
+    {
+        var jsonPath = "settings.json";
+        if (!File.Exists(jsonPath))
+        {
+            Console.WriteLine("No arguments provided and settings.json not found.");
+            Environment.Exit(1);
+        }
+        var json = File.ReadAllText(jsonPath);
+        var options = new JsonSerializerOptions
+        {
+            ReadCommentHandling = JsonCommentHandling.Skip,
+            AllowTrailingCommas = true
+        };
+        var settings = JsonSerializer.Deserialize<ChatParserOptions>(json, options);
+        if (settings == null)
+        {
+            Console.WriteLine("Failed to parse settings.json.");
+            Environment.Exit(1);
+        }
+        return settings;
+    }
 }

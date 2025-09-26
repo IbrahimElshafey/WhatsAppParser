@@ -7,17 +7,23 @@ internal static class MediaHelper
 {
     public static string DetectMediaToken(string text)
     {
+        // Return empty string if input text is null or whitespace
         if (string.IsNullOrWhiteSpace(text)) return "";
+        
+        // Check for known media placeholder texts in multiple languages
         if (text.Contains("<Media omitted>", StringComparison.OrdinalIgnoreCase) ||
             text.Contains("المرفق غير متاح", StringComparison.OrdinalIgnoreCase) ||
             text.Contains("image omitted", StringComparison.OrdinalIgnoreCase) ||
             text.Contains("(file attached)", StringComparison.OrdinalIgnoreCase))
         {
-            var m = ChatParserOptions.FileLikePattern.Match(text);
-            return m.Success ? m.Value : "";
+            // Extract the actual filename from the media placeholder text
+            var mediaPlaceholderMatch = ChatParserOptions.FileLikePattern.Match(text);
+            return mediaPlaceholderMatch.Success ? mediaPlaceholderMatch.Value : "";
         }
-        var match = ChatParserOptions.FileLikePattern.Match(text);
-        return match.Success ? match.Value : "";
+        
+        // For regular text, attempt to find any filename pattern
+        var filenameMatch = ChatParserOptions.FileLikePattern.Match(text);
+        return filenameMatch.Success ? filenameMatch.Value : "";
     }
 
     public static string? ResolveMediaLink(string dir, string token)

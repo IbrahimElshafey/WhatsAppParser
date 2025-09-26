@@ -6,18 +6,16 @@ namespace WhatsAppChatToExcel
 {
     internal sealed class ExcelWriter
     {
-        private readonly CommandLineOptions _options;
         private readonly ChatParserOptions _parserOptions;
 
-        public ExcelWriter(CommandLineOptions options, ChatParserOptions parserOptions)
+        public ExcelWriter(ChatParserOptions parserOptions)
         {
-            _options = options;
             _parserOptions = parserOptions;
         }
 
         public void WriteExcel(IEnumerable<ChatMessage> messages, string outputPath)
         {
-            if (_options.SheetMode == SheetMode.All)
+            if (_parserOptions.SheetMode == SheetMode.All)
                 WriteAllInOneSheet(messages, outputPath);
             else
                 WritePerDay(messages, outputPath);
@@ -36,9 +34,9 @@ namespace WhatsAppChatToExcel
                 sheets[day] = (ws, 2, 0);
             }
 
-            foreach (var message in GetFilteredMessages(messages))
+            foreach (var message in messages)
             {
-                var dto = ApplyTimezone(message.Date, _parserOptions.TimezoneOffset);
+                var dto = new DateTimeOffset(message.Date);
                 var day = dto.Date;
 
                 EnsureSheet(day);
@@ -51,7 +49,7 @@ namespace WhatsAppChatToExcel
             }
 
             foreach (var kv in sheets)
-                if (_options.ForceRtl || kv.Value.arabicScore >= 20)
+                if (_parserOptions.ForceRtl || kv.Value.arabicScore >= 20)
                     kv.Value.ws.RightToLeft = true;
 
             wb.SaveAs(outputPath);
@@ -66,16 +64,16 @@ namespace WhatsAppChatToExcel
             int row = 2;
             int arabicScore = 0;
 
-            foreach (var message in GetFilteredMessages(messages))
+            foreach (var message in messages)
             {
-                var dto = ApplyTimezone(message.Date, _parserOptions.TimezoneOffset);
+                var dto = new DateTimeOffset(message.Date);
                 WriteMessageToRow(ws, row, message, dto);
 
                 if (ContainsArabic(message.Message) || ContainsArabic(message.Sender)) arabicScore++;
                 row++;
             }
 
-            if (_options.ForceRtl || arabicScore >= 20)
+            if (_parserOptions.ForceRtl || arabicScore >= 20)
                 ws.RightToLeft = true;
 
             wb.SaveAs(outputPath);
@@ -101,12 +99,12 @@ namespace WhatsAppChatToExcel
             ws.Cell(row, 3).Value = message.Message;
             ws.Cell(row, 3).Style.Alignment.WrapText = true;
 
-            if (!string.IsNullOrEmpty(_options.MediaDirectory))
+            if (!string.IsNullOrEmpty(_parserOptions.MediaDirectory))
             {
                 var token = MediaHelper.DetectMediaToken(message.Message);
                 if (!string.IsNullOrEmpty(token))
                 {
-                    var link = MediaHelper.ResolveMediaLink(_options.MediaDirectory!, token);
+                    var link = MediaHelper.ResolveMediaLink(_parserOptions.MediaDirectory!, token);
                     if (link != null)
                     {
                         var msgCell = ws.Cell(row, 3);
@@ -117,24 +115,6 @@ namespace WhatsAppChatToExcel
             }
         }
 
-        private IEnumerable<ChatMessage> GetFilteredMessages(IEnumerable<ChatMessage> messages)
-        {
-            foreach (var message in messages)
-            {
-                if (_options.SkipSystem && message.IsSystem) continue;
-
-                var dto = ApplyTimezone(message.Date, _parserOptions.TimezoneOffset);
-                var day = dto.Date;
-
-                if (_options.FromDate.HasValue && day < _options.FromDate.Value) continue;
-                if (_options.ToDate.HasValue && day > _options.ToDate.Value) continue;
-
-                yield return message;
-            }
-        }
-
-        private static DateTimeOffset ApplyTimezone(DateTime dt, TimeSpan? tzOffset) =>
-            tzOffset == null ? new DateTimeOffset(dt) : new DateTimeOffset(DateTime.SpecifyKind(dt, DateTimeKind.Unspecified), tzOffset.Value);
 
         private static bool ContainsArabic(string s) =>
             s.AsSpan().IndexOfAnyInRange('\u0600', '\u06FF') >= 0
